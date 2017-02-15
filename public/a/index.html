@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+    <head>
+       <title>Playlist Creator</title> 
+       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+       <link rel="stylesheet" type="text/css" href="design.css">
+       <script type="text/javascript">
+       var acous="";
+       var dance="";
+       var ener="";
+       var instru="";
+       var live="";
+       var loud="";
+       var popu="";
+       var speech="";
+       var tempo="";
+       var artists;
+       var tracks;
+       var seeds=[];
+       var seedsTracks = [];
+       var seedsArtists = [];
+       var playlistTracks = [];
+       var playlistName = "Playlist Creator"
+       function submit(){
+           if(document.getElementById("acousticnessc").checked){
+           acous = document.getElementById("acousticness").value;}
+           if(document.getElementById("danceabilityc").checked){
+           dance = document.getElementById("danceability").value;}
+           if(document.getElementById("energyc").checked){
+           ener = document.getElementById("energy").value;}
+           if(document.getElementById("instrumentalnessc").checked){
+           instru = document.getElementById("instrumentalness").value;}
+           if(document.getElementById("livenessc").checked){
+           live = document.getElementById("liveness").value;}
+           if(document.getElementById("loudnessc").checked){
+           loud = document.getElementById("loudness").value;}
+           if(document.getElementById("popularityc").checked){
+           popu = document.getElementById("popularity").value;}
+           if(document.getElementById("speechinessc").checked){
+           speech = document.getElementById("speechiness").value;}
+           if(document.getElementById("tempoc").checked){
+           tempo = document.getElementById("tempo").value;}
+           playlistName = document.getElementById("playlistName").value;
+           $.ajax({
+                type:"POST",
+                url: 'https://api.spotify.com/v1/users/'+userId+'/playlists',
+                headers: {
+                  'Authorization': 'Bearer ' + access_token,
+                  "Content-Type":"application/json",
+                },
+                data:"{\"name\":\""+playlistName+"\", \"public\":false}",
+                success: function(response) {
+                    console.log(response);
+                    playlistId=response.id;
+                }
+            });
+           document.getElementById("first").hidden=true;
+           document.getElementById("second").hidden=false;
+       }
+       function getHashParams() {
+          var hashParams = {};
+          var e, r = /([^&;=]+)=?([^&;]*)/g,
+              q = window.location.hash.substring(1);
+          while ( e = r.exec(q)) {
+             hashParams[e[1]] = decodeURIComponent(e[2]);
+          }
+          return hashParams;
+        }
+        var userId = '';
+        var playlistId = '';
+        var params = getHashParams();
+
+        var access_token = params.access_token,
+            refresh_token = params.refresh_token,
+            error = params.error;
+
+        if (error) {
+          alert('There was an error during the authentication');
+        } else {
+          if (access_token) {
+            // render oauth info
+/*            oauthPlaceholder.innerHTML = oauthTemplate({
+              access_token: access_token,
+              refresh_token: refresh_token
+            });*/
+            $.ajax({
+                url: 'https://api.spotify.com/v1/me',
+                headers: {
+                  'Authorization': 'Bearer ' + access_token
+                },
+                success: function(response) {
+                  userId=response.id;
+                }
+            });
+            /*$.ajax({
+                type:"POST",
+                url: 'https://api.spotify.com/v1/users/nikileshsub/playlists',
+                headers: {
+                  'Authorization': 'Bearer ' + access_token,
+                  "Content-Type":"application/json",
+                },
+                data:"{\"name\":\"Add Track\", \"public\":false}",
+                success: function(response) {
+                    console.log(response);
+                    var a = response.id;
+                    playlistId=response.id;
+                }
+            });*/
+            
+            /*$.ajax({
+                type:"POST",
+                url: 'https://api.spotify.com/v1/users/nikileshsub/playlists/4656TNVAyz2RzDDszApy4M/tracks',
+                headers: {
+                  'Authorization': 'Bearer ' + access_token,
+                  "Content-Type":"application/json",
+                },
+                data:"{\"uris\": [\"spotify:track:4iV5W9uYEdYUVa79Axb7Rh\"]}",
+                //data:{uris: ["spotify:track:4iV5W9uYEdYUVa79Axb7Rh"]},
+                success: function(response) {
+                    console.log(response);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log(jqXHR.responseText);
+                    console.log(jqXHR);
+                    console.log(textStatus);
+                    console.log(errorThrown);
+                }
+            });*/
+            
+          }
+        }
+        function updateSlider(a){
+            document.getElementById(a.name+"a").innerHTML=a.name.substring(0,1).toUpperCase()+a.name.substring(1)+": "+a.value;
+        }
+        function add(a){
+            if(seedsTracks.length + seedsArtists.length>=5)
+            {
+                alert("You can not add more than 5 seeds. Please delete a seed before adding a new one.")
+            }
+            else{
+                var b = parseInt(a.name.substring(a.name.length-1),10);
+                if(a.name.substring(3,4)=="T")
+                {
+                    seedsTracks.push(tracks[b-1].id);
+                    seeds.push(tracks[b-1].name);
+                }
+                else{
+                    seedsArtists.push(artists[b-1].id);
+                    seeds.push(artists[b-1].name);
+                }
+                var i = 0;
+                while(i<seeds.length)
+                {
+                    document.getElementById("seedName"+(i+1)).innerHTML=seeds[i];
+                    i++;
+                }
+            }
+            
+        }
+        function delte(a){
+            
+        }
+        function search(){
+            var query=document.getElementById("searchField").value;
+            $.ajax({
+                url: 'https://api.spotify.com/v1/search',
+                data:{
+                    q:query,
+                    type:'artist,track',
+                    limit:'3'
+                },
+                //data:{uris: ["spotify:track:4iV5W9uYEdYUVa79Axb7Rh"]},
+                success: function(response) {
+                    console.log(response);
+                    artists = response.artists.items;
+                    var i = 0;
+                    while(i<artists.length){
+                        document.getElementById("nameArtist"+(i+1)).innerHTML = artists[i].name;
+                        if(artists[i].images.length>=3)
+                        {
+                        document.getElementById("imgArtist"+(i+1)).src = artists[i].images[2].url;
+                        document.getElementById("imgArtist"+(i+1)).hidden=false;}
+                        document.getElementById("addArtist"+(i+1)).hidden=false;
+                        i++;
+                    }
+                    i=0;
+                    tracks=response.tracks.items;
+                    while(i<tracks.length){
+                        document.getElementById("Track"+(i+1)).innerHTML = tracks[i].name;
+                        var j = 0;
+                        document.getElementById("trackArtist"+(i+1)).innerHTML="";
+                        while(j<tracks[i].artists.length){
+                            if(j==tracks[i].artists.length-1){
+                        document.getElementById("trackArtist"+(i+1)).innerHTML += tracks[i].artists[j].name;}
+                            else{
+                                document.getElementById("trackArtist"+(i+1)).innerHTML += tracks[i].artists[j].name+", ";
+                            }
+                            j++;
+                        }
+                        document.getElementById("addTrack"+(i+1)).hidden=false;
+                        
+                        i++;
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log(jqXHR.responseText);
+                    console.log(jqXHR);
+                    console.log(textStatus);
+                    console.log(errorThrown);
+                }
+            });
+            
+        }
+        function create(){
+            console.log(seedsArtists.toString());
+            if(seedsArtists.length+seedsTracks.length<=0)
+            {
+                alert("You must have at least 1 seed to create playlist.")
+            }else{
+            $.ajax({
+                url: 'https://api.spotify.com/v1/recommendations',
+                headers:{
+                    'Authorization': 'Bearer ' + access_token
+                },
+                data:{
+                    seed_artists: seedsArtists.toString(),
+                    seed_tracks: seedsTracks.toString(),
+                    target_acousticness:acous,
+                    target_danceability:dance,
+                    target_energy:ener,
+                    target_instrumentalness:instru,
+                    target_liveness:live,
+                    target_loudness:loud,
+                    target_popularity:popu,
+                    target_speech:speech,
+                    target_tempo:tempo
+                },
+                //data:{uris: ["spotify:track:4iV5W9uYEdYUVa79Axb7Rh"]},
+                success: function(response) {
+                    console.log(response);
+                    var i = 0;
+                    while(i<response.tracks.length){
+                        playlistTracks.push(response.tracks[i].uri);
+                        i++;
+                    }
+                    $.ajax({
+                type:"POST",
+                url: 'https://api.spotify.com/v1/users/'+userId+'/playlists/'+playlistId+'/tracks',
+                headers: {
+                  'Authorization': 'Bearer ' + access_token,
+                  "Content-Type":"application/json",
+                },
+                data:JSON.stringify({"uris": playlistTracks}),
+                //JSON.stringify({"uris": ["spotify:track:4iV5W9uYEdYUVa79Axb7Rh","spotify:track:1301WleyT98MSxVHPZCA6M"]})
+                //"{\"uris\": [\""+playlistTracks.toString()+"\"]}",
+                //data:{uris: ["spotify:track:4iV5W9uYEdYUVa79Axb7Rh"]},
+                success: function(response) {
+                    document.getElementById("second").hidden=true;
+                    document.getElementById("third").hidden=false;
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log(jqXHR.responseText);
+                    console.log(jqXHR);
+                    console.log(textStatus);
+                    console.log(errorThrown);
+                }
+            });
+                    
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log(jqXHR.responseText);
+                    console.log(jqXHR);
+                    console.log(textStatus);
+                    console.log(errorThrown);
+                }
+            });
+            }
+            
+            
+        }
+       </script>
+    </head>
+    <body>
+        <div id="first" align="middle">
+        Playlist Name
+        <br>
+        <input type="text" name="playlistName" id="playlistName"/>
+        <br>
+        <input type="checkbox" id="acousticnessc" checked hidden>
+        <label id="acousticnessa" for="acousticness">Acousticness: .50</label>
+        <br>
+      <input type="range" name="acousticness" id="acousticness" value=".50" min="0" max="1.00" step=".01" data-show-value="true" onchange="updateSlider(this)">
+       <br>
+       <input type="checkbox" id="danceabilityc" checked hidden>
+      <label id="danceabilitya" for="danceability">Danceability: .50</label>
+      <br>
+      <input type="range" name="danceability" id="danceability" value=".50" min="0" max="1.00" step=".01" data-show-value="true" onchange="updateSlider(this)">
+       <br>
+       <input type="checkbox" id="energyc" checked hidden>
+      <label id="energya" for="energy">Energy: .50</label>
+      <br>
+      <input type="range" name="energy" id="energy" value=".50" min="0" max="1.00" step=".01" data-show-value="true" onchange="updateSlider(this)">
+       <br>
+       <input type="checkbox" id="instrumentalnessc" checked hidden>
+      <label id="instrumentalnessa" for="instrumentalness">Instrumentalness: .50</label>
+      <br>
+      <input type="range" name="instrumentalness" id="instrumentalness" value=".50" min="0" max="1.00" step=".01" data-show-value="true" onchange="updateSlider(this)">
+      <br>
+      <input type="checkbox" id="livenessc" checked hidden>
+      <label id="livenessa" for="liveness">Liveness: .50</label>
+      <br>
+      <input type="range" name="liveness" id="liveness" value=".50" min="0" max="1.00" step=".01" data-show-value="true" onchange="updateSlider(this)">
+       <br>
+       <input type="checkbox" id="loudnessc" checked hidden>
+      <label id="loudnessa" for="loudness">Loudness .50:</label>
+      <br>
+      <input type="range" name="loudness" id="loudness" value=".50" min="0" max="1.00" step=".01" data-show-value="true" onchange="updateSlider(this)">
+       <br>
+       <input type="checkbox" id="popularityc" checked hidden>
+      <label id="popularitya" for="popularity">Popularity: 50</label>
+      <br>
+      <input type="range" name="popularity" id="popularity" value="50" min="0" max="100" step="1" data-show-value="true" onchange="updateSlider(this)">
+       <br>
+       <input type="checkbox" id="speechinessc" checked hidden>
+      <label id="speechinessa" for="speechiness">Speechiness: .50</label>
+      <br>
+      <input type="range" name="speechiness" id="speechiness" value=".50" min="0" max="1.00" step=".01" data-show-value="true" onchange="updateSlider(this)">
+       <br>
+       <input type="checkbox" id="tempoc" checked hidden>
+      <label id="tempoa" for="tempo">Tempo: .50</label>
+      <br>
+      <input type="range" name="tempo" id="tempo" value=".50" min="0" max="1.00" step=".01" data-show-value="true" onchange="updateSlider(this)">
+       <br>
+      <input type="button" name="Submit" id="Submit" value="Submit" onclick="submit()"/>
+      </div>
+      
+      <div id="second" hidden align="middle">
+        <input type="text" id="searchField"/> 
+        <input type="button" name="search" id="search" value="Search" onclick="search()"/>
+        <div id="results">
+            
+        <table>
+            <tr>
+                <td>
+                    <img hidden src="" id="imgArtist1"></img>
+                    <br>
+                    <div id="nameArtist1"></div>
+                    <br>
+                    <input hidden type="button" name="addArtist1" id="addArtist1" value="Add Artist" onclick="add(this)"/>
+                </td>
+                <td>
+                    <img hidden src="" id="imgArtist2"></img>
+                    <br>
+                    <div id="nameArtist2"></div>
+                    <br>
+                    <input hidden type="button" name="addArtist2" id="addArtist2" value="Add Artist" onclick="add(this)"/>
+                </td>
+                <td>
+                    <img hidden src="" id="imgArtist3"></img>
+                    <br>
+                    <div id="nameArtist3"></div>
+                    <br>
+                    <input hidden type="button" name="addArtist3" id="addArtist3" value="Add Artist" onclick="add(this)"/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div id="Track1"></div>
+                    <br>
+                    <div id="trackArtist1"></div>
+                    <input hidden type="button" name="addTrack1" id="addTrack1" value="Add Track" onclick="add(this)"/>
+                </td>
+                <td>
+                    <div id="Track2"></div>
+                    <br>
+                    <div id="trackArtist2"></div>
+                    <input hidden type="button" name="addTrack2" id="addTrack2" value="Add Track" onclick="add(this)"/>
+                </td>
+                <td>
+                    <div id="Track3"></div>
+                    <br>
+                    <div id="trackArtist3"></div>
+                    <input hidden type="button" name="addTrack3" id="addTrack3" value="Add Track" onclick="add(this)"/>
+                </td>
+            </tr>
+            
+        </table>
+        <br>
+        <br>
+        Seeds:
+        <table>
+            <tr>
+                <td>
+                    <div id="seedName1">Seed 1 Available</div>
+                    <br>
+                    
+                </td>  
+                <td>
+                    <div id="seedName2">Seed 2 Available</div>
+                    <br>
+                    
+                </td>  
+                <td>
+                    <div id="seedName3">Seed 3 Available</div>
+                    <br>
+                    
+                </td>  
+                <td>
+                    <div id="seedName4">Seed 4 Available</div>
+                    <br>
+                    
+                </td>  
+                <td>
+                    <div id="seedName5">Seed 5 Available</div>
+                    <br>
+                    
+                </td>  
+                
+            </tr>
+        </table>
+        <input type="button" name="reccomend" id="reccomend" value="Create Playlist" onclick="create()"/>
+            
+        </div>
+        
+      </div>
+      <div id="third" align="center" hidden>
+            <h1>Playlist Created</h1>
+            <form action="http://play.spotify.com/collection">
+            <input type="submit" value="Check out playlist" />
+            </form>
+        </div>
+    </body>
+</html>
